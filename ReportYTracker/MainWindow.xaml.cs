@@ -223,7 +223,7 @@ namespace ReportYTracker
             InitializeComponent();
             SetConfiguration();
         }
-        //test
+
         private void Default_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (Settings.Default.IsSaveCredentialsYTracker || Settings.Default.IsSaveCredentialsTM)
