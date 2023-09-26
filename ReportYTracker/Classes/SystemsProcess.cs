@@ -36,21 +36,5 @@ namespace ReportYTracker.Helpers
                 Marshal.ZeroFreeGlobalAllocUnicode(valuePtr);
             }
         }
-        public static DateRange GetDateRangeCurrentWeek(DateTime? now = null)
-        {
-            var dt = !now.HasValue ? DateTime.MinValue : now!.Value;
-            if (now == null)
-                dt = DateTime.Today;
-            CultureInfo cultureInfo = CultureInfo.CurrentCulture;
-            DateTime dateFrom = dt;
-            if (dt.DayOfWeek != DayOfWeek.Monday)
-            {
-                dateFrom = dt.AddDays(-(int)dt.DayOfWeek + 1);
-                while (dateFrom.DayOfWeek != cultureInfo.DateTimeFormat.FirstDayOfWeek)
-                    dateFrom = dateFrom.AddDays(-1);
-            }
-            var dateTo = dateFrom.AddDays(6);
-            return new DateRange(dateFrom, dateTo);
-        }
     }
 }
