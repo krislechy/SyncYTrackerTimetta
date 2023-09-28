@@ -1,9 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Web.WebView2.Wpf;
+using Newtonsoft.Json;
+using ReportYTracker.Context;
 using ReportYTracker.Helpers;
 using ReportYTracker.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Formats.Asn1;
 using System.Globalization;
 using System.IO;
@@ -17,8 +20,10 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
+using System.Windows.Media;
 using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -26,6 +31,7 @@ namespace ReportYTracker.Data.YTracker
 {
     public class YTracker : BaseService<IEnumerable<ReportYT>>, IService<IEnumerable<ReportYT>>
     {
+        private MainContext context { get => SystemsProcess.GetMainContext<MainContext>(); }
         public string federation { get; set; } = "";
         private string domain { get; set; }
         private string userName { get; set; }
@@ -71,9 +77,11 @@ namespace ReportYTracker.Data.YTracker
 
                 response = await proxy.GetAsync(federationLink);
 
-                if (!CheckCaptcha(response)) return false;
+                if (!CheckCaptcha(response)) return await Auth(networkCredential);
 
                 var location = response.RequestMessage?.RequestUri?.AbsoluteUri;
+
+                if (location.Contains("/pages/my")) return true;
 
                 if (String.IsNullOrEmpty(location)) return false;
 
@@ -94,7 +102,7 @@ namespace ReportYTracker.Data.YTracker
                 response = await proxy.PostAsync(actionForm, GetParamsContent(parameters));
                 if (!response.IsSuccessStatusCode) throw new Exception("YTracker: Неверный логин или пароль");
 
-                if (!CheckCaptcha(response)) return false;
+                if (!CheckCaptcha(response)) return await Auth(networkCredential);
 
                 SaveSession(cookieSessionFileName);
 
@@ -108,19 +116,21 @@ namespace ReportYTracker.Data.YTracker
             var yc_csrfToken = cookies.GetCookies(proxy.BaseAddress).FirstOrDefault(x => x.Name == csrfToken);
             if (yc_session != null)
             {
-                var coll = new List<YTStorageModel>();
-                coll.Add(new YTStorageModel()
+                var coll = new List<YTStorageModel>
                 {
-                    Name = yc_session.Name,
-                    Value = yc_session.Value,
-                    Expires = yc_session.Expires,
-                });
-                coll.Add(new YTStorageModel()
-                {
-                    Name = yc_csrfToken.Name,
-                    Value = yc_csrfToken.Value,
-                    Expires = yc_csrfToken.Expires,
-                });
+                    new YTStorageModel()
+                    {
+                        Name = yc_session.Name,
+                        Value = yc_session.Value,
+                        Expires = yc_session.Expires,
+                    },
+                    new YTStorageModel()
+                    {
+                        Name = yc_csrfToken.Name,
+                        Value = yc_csrfToken.Value,
+                        Expires = yc_csrfToken.Expires,
+                    }
+                };
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(coll);
                 File.WriteAllText(pathFile, json);
             }
@@ -168,6 +178,8 @@ namespace ReportYTracker.Data.YTracker
 
             var newData = new List<ReportYT>();
 
+            var totalCount = (100 - context.Progress) / (double)data.Count();
+
             foreach (var report in data)
             {
                 var content = new StringContent(JsonConvert.SerializeObject(new
@@ -204,8 +216,10 @@ namespace ReportYTracker.Data.YTracker
                         }
                     }
                 }
+
+                context.Progress += totalCount;
             }
-            return newData;//
+            return newData;
         }
         private async Task<IEnumerable<ReportYT>> ExportReport(DateRange dateRange)
         {
@@ -220,7 +234,7 @@ namespace ReportYTracker.Data.YTracker
                 }
                 else throw new UnauthorizedAccessException("Не удалось авторизоваться");
             }
-            if (!CheckCaptcha(response)) return data;
+            if (!CheckCaptcha(response)) await ExportReport(dateRange);
             if (response.Content?.Headers?.ContentType?.MediaType == "text/csv")
             {
                 var stream = response.Content.ReadAsStream();
@@ -228,13 +242,27 @@ namespace ReportYTracker.Data.YTracker
             }
             return data;
         }
+        public int countTry = 0;
         private bool CheckCaptcha(HttpResponseMessage responseMessage)
         {
             var path = responseMessage.RequestMessage?.RequestUri?.AbsoluteUri;
             if (path == null) return true;
             if ((path.Contains("/showcaptcha")))
             {
-                SystemsProcess.OpenLink(path);
+                countTry++;
+                if (countTry > 5) throw new Exception("Попробуйте попозже");
+                var allcookies = cookies.GetAllCookies();
+
+                var window = new BrowserView(path, allcookies);
+                window.Owner = System.Windows.Application.Current.MainWindow;
+                window.ShowDialog();
+
+                cookies = new CookieContainer();
+
+                foreach (Cookie cookie in window.cookies)
+                    cookies.Add(cookie);
+
+                context.ProgressColor = Brushes.Orange;
                 return false;
             }
             return true;

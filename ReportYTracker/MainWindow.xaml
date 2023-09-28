@@ -4,12 +4,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ReportYTracker"
+        xmlns:mac="clr-namespace:ReportYTracker.Context"
         mc:Ignorable="d"
         x:Name="MainWindowWindow"
         WindowStartupLocation="CenterScreen"
         Title="Sync YTracker &#x26; Timetta" MinHeight="450" MinWidth="800">
     <Window.DataContext>
-        <local:Context/>
+        <mac:MainContext/>
     </Window.DataContext>
     <Window.Resources>
         <Style TargetType="{x:Type TextBox}">
@@ -39,6 +40,7 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
@@ -140,20 +142,16 @@
                         <Setter Property="Padding" Value="5"/>
                     </Style>
                 </StackPanel.Resources>
-                <Button Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" x:Name="GetYaTrackerBtn" Click="GetYaTrackerBtn_Click" Height="auto">
-                    <Button.Content>
-                        <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Получить данные YTracker"/>
-                            <TextBlock FontSize="10" Margin="0 5 0 0">
-                                <Run Text="Если перебрасывает на капчу,"/>
-                                <LineBreak/>
-                                <Run Text="необходимо подождать минут 10-15"/>
-                            </TextBlock>
-                        </StackPanel>
-                    </Button.Content>
-                </Button>
+                <Button Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" x:Name="GetYaTrackerBtn" Click="GetYaTrackerBtn_Click" Height="auto" Content="Получить данные YTracker"/>
                 <Button Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" IsEnabled="{Binding IsEnabledSync,Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Content="Синхронизировать с Timetta" HorizontalAlignment="Left"  x:Name="SyncBtn" Click="SyncBtn_Click" Height="30"/>
             </StackPanel>
+            <Grid Grid.Row="3" Grid.ColumnSpan="2">
+                <ProgressBar local:ProgressBarSmoother.SmoothValue="{Binding Progress, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" 
+                         IsIndeterminate="{Binding ProgressIsIndeterminate, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                         Height="15" Foreground="{Binding ProgressColor,Mode=OneWay,UpdateSourceTrigger=PropertyChanged}" BorderThickness="0" Margin="0 0 0 2"/>
+                <TextBlock Text="{Binding Progress, Mode=OneWay,UpdateSourceTrigger=PropertyChanged, StringFormat=N2, TargetNullValue=0}" TextAlignment="Center" FontSize="15" Foreground="Blue"
+                           VerticalAlignment="Center" Margin="-10 0 0 3"/>
+            </Grid>
         </Grid>
         <Grid Tag="YTracker" Grid.Row="1">
             <Grid.RowDefinitions>
