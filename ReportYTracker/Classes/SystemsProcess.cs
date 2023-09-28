@@ -36,5 +36,15 @@ namespace ReportYTracker.Helpers
                 Marshal.ZeroFreeGlobalAllocUnicode(valuePtr);
             }
         }
+
+        public static MainWindow GetMainWindow()
+        {
+            return (MainWindow)System.Windows.Application.Current.MainWindow;
+        }
+
+        public static T GetMainContext<T>() where T:class
+        {
+            return GetMainWindow().context as T ?? throw new ArgumentNullException("Main Context is null");
+        }
     }
 }
