@@ -42,12 +42,12 @@ namespace ReportYTracker.Data.Timetta
         private const string authLink = "https://auth.timetta.com/connect/token";
         private int rowVersion = 0;
         private TokenInfo tokenInfo { get; set; }
-        public Timetta()
+        public Timetta(NetworkCredential credential) : base(credential)
         {
             base.protocol = "https";
             base.host = "api.timetta.com";
         }
-        public override async Task<Timesheet?> GetData(DateRange dateRange)
+        public override async Task<Timesheet?> GetDataAsync(DateRange dateRange)
         {
             var odataRequest = $"$select=id&$filter=(timeSheet/dateFrom le {dateRange.DateFrom:yyyy-MM-dd}) and (timeSheet/dateTo ge {dateRange.DateTo:yyyy-MM-dd})&$top=50&$expand=timeSheet($select=id,dateFrom,dateTo;$expand=state($select=id,code))&$orderby=timeSheet/name";
             var result = await proxy.GetAsync($"{protocol}://{host}/odata/TimeSheetTotals?{odataRequest}");
@@ -78,7 +78,7 @@ namespace ReportYTracker.Data.Timetta
             }
             return null;
         }
-        public override async Task<bool> Auth(NetworkCredential credential)
+        public override async Task<bool> AuthAsync()
         {
             if (proxy.DefaultRequestHeaders.Authorization != null && tokenInfo != null && !tokenInfo.isExpiredToken)
             {

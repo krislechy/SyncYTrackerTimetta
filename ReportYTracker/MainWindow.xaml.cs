@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
+using System.DirectoryServices.ActiveDirectory;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -78,16 +79,28 @@ namespace ReportYTracker
             {
                 dateRange = new DateRange(context.DateFrom, context.DateTo);
 
-                yt ??= new YTracker()
+                if (yt == null)
                 {
-                    federation = YTrackerFederation!,
-                };
-                yt.countTry = 0;
-                var resultAuth = await yt.Auth(new NetworkCredential(Settings.Default.YTrackerUserName, Settings.Default.YTrackerPassword));
-                context.Progress = 20;
+                    if (!Settings.Default.YTrackerUserName.Contains("\\"))
+                        throw new InvalidDataException("Логин должен содержать домен, domain\\username");
+                    var split = Settings.Default.YTrackerUserName.Split("\\");
+                    var credentials = new NetworkCredential()
+                    {
+                        Domain = split[0],
+                        UserName = split[1],
+                        Password = Settings.Default.YTrackerPassword,
+                    };
+
+                    yt = new YTracker(credentials, YTrackerFederation!);
+                }
+
+                context.Progress = 5;
+
+                var resultAuth = await yt.AuthAsync();
+        
                 if (resultAuth)
                 {
-                    var data = await yt.GetData(dateRange);
+                    var data = await yt.GetDataAsync(dateRange);
 
                     if (data != null)
                     {
@@ -121,13 +134,13 @@ namespace ReportYTracker
             {
                 dateRange = new DateRange(context.DateFrom, context.DateTo);
 
-                tm ??= new Timetta();
+                tm ??= new Timetta(new NetworkCredential(Settings.Default.TMUserName, Settings.Default.TMPassword));
 
-                var result = await tm.Auth(new NetworkCredential(Settings.Default.TMUserName, Settings.Default.TMPassword));
+                var result = await tm.AuthAsync();
 
                 if (!result) throw new Exception("Неверные логин или пароль");
 
-                var ts = await tm.GetData(dateRange);
+                var ts = await tm.GetDataAsync(dateRange);
                 if (ts != null)
                 {
                     var dataTm = await tm.ConvertFromReportYT(context.YTrackerData);
