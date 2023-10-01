@@ -10,7 +10,7 @@ namespace ReportYTracker.Data
 {
     public interface IService<T> where T : class
     {
-        public abstract Task<T> GetData(DateRange dateRange);
-        public Task<bool> Auth(NetworkCredential credential);
+        public Task<T> GetDataAsync(DateRange dateRange);
+        public Task<bool> AuthAsync();
     }
 }

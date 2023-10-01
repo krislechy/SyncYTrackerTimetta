@@ -1,4 +1,4 @@
-﻿<Window x:Class="ReportYTracker.BrowserView"
+﻿<Window x:Class="ReportYTracker.YTrackerWV2Engine"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -11,6 +11,7 @@
         WindowStyle="None"
         Closing="Window_Closing"
         ShowInTaskbar="False"
+        Visibility="Hidden"
         Title="Captcha" Height="450" Width="800">
     <Grid>
         <wv2:WebView2 x:Name="wv2c"/>

@@ -148,8 +148,19 @@
             <Grid Grid.Row="3" Grid.ColumnSpan="2">
                 <ProgressBar local:ProgressBarSmoother.SmoothValue="{Binding Progress, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" 
                          IsIndeterminate="{Binding ProgressIsIndeterminate, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                         Height="15" Foreground="{Binding ProgressColor,Mode=OneWay,UpdateSourceTrigger=PropertyChanged}" BorderThickness="0" Margin="0 0 0 2"/>
-                <TextBlock Text="{Binding Progress, Mode=OneWay,UpdateSourceTrigger=PropertyChanged, StringFormat=N2, TargetNullValue=0}" TextAlignment="Center" FontSize="15" Foreground="Blue"
+                         Height="15" Foreground="{Binding ProgressColor,Mode=OneWay,UpdateSourceTrigger=PropertyChanged}" BorderThickness="0" Margin="0 0 0 2">
+                    <ProgressBar.OpacityMask>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Offset="0" Color="Black"></GradientStop>
+                            <GradientStop Offset="0.3" Color="Black"></GradientStop>
+                            <GradientStop Offset=".5" Color="Transparent"></GradientStop>
+                            <GradientStop Offset="1" Color="Black"></GradientStop>
+                            <GradientStop Offset=".8" Color="Black"></GradientStop>
+                        </LinearGradientBrush>
+                    </ProgressBar.OpacityMask>
+                </ProgressBar>
+                <TextBlock Text="{Binding Progress, Mode=OneWay,UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2} %, TargetNullValue={}{0:%}}" 
+                           TextAlignment="Center" FontSize="15" Foreground="Black" FontWeight="Bold"
                            VerticalAlignment="Center" Margin="-10 0 0 3"/>
             </Grid>
         </Grid>
