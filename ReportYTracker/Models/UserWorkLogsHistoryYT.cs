@@ -67,12 +67,12 @@ namespace ReportYTracker.Models
                                 }
                             case 'D':
                                 {
-                                    totalHours += (double)rawHours * 24;
+                                    totalHours += (double)rawHours * 8;
                                     break;
                                 }
                             case 'W':
                                 {
-                                    totalHours += (double)rawHours * 168;
+                                    totalHours += (double)rawHours * 21;
                                     break;
                                 }
                         }
