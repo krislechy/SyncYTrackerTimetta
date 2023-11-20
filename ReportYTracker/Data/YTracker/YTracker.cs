@@ -1,5 +1,6 @@
 ﻿using Microsoft.Web.WebView2.Wpf;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using ReportYTracker.Context;
 using ReportYTracker.Helpers;
 using ReportYTracker.Models;
@@ -109,6 +110,8 @@ namespace ReportYTracker.Data.YTracker
 
             var totalCount = (100 - context.Progress) / (double)data.Count();
 
+            var userId = await GetUserId();
+
             foreach (var report in data)
             {
                 var content = new StringContent(JsonConvert.SerializeObject(new
@@ -125,6 +128,8 @@ namespace ReportYTracker.Data.YTracker
                 {
                     foreach (var history in histories.data)
                     {
+                        if (history.createdBy.cloudUid != userId) continue;
+
                         if (history.start.Date == date.Date)
                         {
                             var sameTask = newData.FirstOrDefault(x => x.Date.Date == date.Date && x.TaskId == history.issue.key);
@@ -151,6 +156,13 @@ namespace ReportYTracker.Data.YTracker
 
             context.Progress = 100;
             return newData;
+        }
+        private async Task<string> GetUserId()
+        {
+            var response = await proxy.GetAsync($"{protocol}://{host}/api/user/iam-organization-info");
+            var content = await response.Content.ReadAsStringAsync();
+            var jt = JToken.Parse(content);
+            return jt.Value<string?>("userId") ?? "";
         }
         private async Task<IEnumerable<ReportYT>> ExportReport(DateRange dateRange)
         {
